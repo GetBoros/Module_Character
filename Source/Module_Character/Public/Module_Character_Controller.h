@@ -28,6 +28,8 @@ public:
 
 	AAModule_Character *Module_Character;  // !!! Maybe change to component if need
 
+	UFUNCTION(BlueprintImplementableEvent) void On_Button_Exit();  // BP Event
+
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true") ) UInputMappingContext *Mapping_Context;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true") ) UInputAction *Action_Jump;
