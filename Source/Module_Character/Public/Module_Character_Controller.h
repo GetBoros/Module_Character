@@ -44,7 +44,6 @@ private:
 
 #pragma region TASKS
 /*
-X	- Create in module character BP Controller and BP Character and spec Folder
-V	- AAModule_Character_Controller must have ptr to Owner
+* 
 */
 #pragma endregion

@@ -70,10 +70,7 @@ void AAModule_Character_Controller::Zoom(const FInputActionValue &value)
 void AAModule_Character_Controller::Exit(const FInputActionValue &value)
 {
 	On_Button_Exit();  // Can be additional code in blueprints
-
-	// V Can`t double click
-
-	// 
+	GEngine->ForceGarbageCollection(true);
 }
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Controller::Jump(const FInputActionValue &value)

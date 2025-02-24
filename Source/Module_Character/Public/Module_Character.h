@@ -18,7 +18,7 @@ public:
 	virtual void NotifyControllerChanged();
 	//virtual void SetupPlayerInputComponent(UInputComponent *player_input_component);
 
-	void Zoom(const float step_offset);  // !!! Can be better | change from Vector2D to something else
+	void Zoom(const float step_offset);
 	void Exit();  // Restore Boom state || Menu || Q Button |
 
 	UFUNCTION(BlueprintCallable) void Camera_Switch(AActor *camera);
