@@ -3,6 +3,7 @@
 
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 
@@ -10,7 +11,7 @@ IMPLEMENT_MODULE(FDefaultModuleImpl, Module_Character);
 
 //-------------------------------------------------------------------------------------------------------------
 AAModule_Character::AAModule_Character()
- : Camera_Boom(0), Camera_Follow(0)
+ : Is_State_Camera(false), Camera_Boom(0), Camera_Follow(0)
 {
 	GetCapsuleComponent()->InitCapsuleSize(42.0f, 96.0f);
 
@@ -41,6 +42,15 @@ AAModule_Character::AAModule_Character()
 void AAModule_Character::BeginPlay()
 {
 	Super::BeginPlay();
+	const USkeletalMeshComponent *skeletal_mesh_component = GetMesh();
+	TArray<FName> bone_names = skeletal_mesh_component->GetAllSocketNames();
+
+	for (const FName &bone: bone_names)
+	{
+		int yy = 0;
+		yy++;
+	}
+
 }
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character::NotifyControllerChanged()
@@ -58,17 +68,20 @@ void AAModule_Character::Zoom(const float step_offset)
 	Camera_Follow->FieldOfView = FMath::Clamp(field_of_view, step_min, step_max);  // !!! Can decrease mouse sensivity maybe, i don`t know if i need it now
 }
 //-------------------------------------------------------------------------------------------------------------
-void AAModule_Character::Exit()
+void AAModule_Character::Camera_Exit()
 {
+	Is_State_Camera = false;
 	Camera_Follow->FieldOfView = 90;  // If custom in bp bed
 	Camera_Boom->TargetArmLength = 400;
 	Camera_Boom->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetIncludingScale);
 }
 //-------------------------------------------------------------------------------------------------------------
-void AAModule_Character::Camera_Switch(AActor *camera)
+void AAModule_Character::Camera_Switch(const FVector location, const FRotator rotation)
 {
+	Is_State_Camera = true;
 	Camera_Boom->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
-	Camera_Boom->SetWorldTransform(camera->GetActorTransform() );
+	Camera_Boom->SetWorldLocation(location);
+	Camera_Follow->SetWorldRotation(rotation);
 	Camera_Boom->TargetArmLength = 0;
 }
 //-------------------------------------------------------------------------------------------------------------

@@ -19,9 +19,11 @@ public:
 	//virtual void SetupPlayerInputComponent(UInputComponent *player_input_component);
 
 	void Zoom(const float step_offset);
-	void Exit();  // Restore Boom state || Menu || Q Button |
+	void Camera_Exit();  // Restore Boom state || Menu || Q Button |
 
-	UFUNCTION(BlueprintCallable) void Camera_Switch(AActor *camera);
+	bool Is_State_Camera;  // Remove to switch if have more states
+
+	UFUNCTION(BlueprintCallable) void Camera_Switch(const FVector location, const FRotator rotation);
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true") ) USpringArmComponent *Camera_Boom;

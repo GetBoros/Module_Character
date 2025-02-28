@@ -8,7 +8,8 @@
 
 //-------------------------------------------------------------------------------------------------------------
 AAModule_Character_Controller::AAModule_Character_Controller()
- : Module_Character(0), Mapping_Context(0), Action_Jump(0), Action_Move(0), Action_Look(0), Action_Zoom(0), Action_Exit(0)
+ : Module_Character(0),
+   Mapping_Context(0), Action_Jump(0), Action_Move(0), Action_Look(0), Action_Zoom(0), Action_Exit(0)
 {
 
 }
@@ -69,8 +70,10 @@ void AAModule_Character_Controller::Zoom(const FInputActionValue &value)
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Controller::Exit(const FInputActionValue &value)
 {
-	On_Button_Exit();  // Can be additional code in blueprints
-	GEngine->ForceGarbageCollection(true);
+	if (Module_Character->Is_State_Camera)  // if looked from camera while press Exit button remove state
+		Module_Character->Camera_Exit();
+	else
+		On_Button_Exit();  // Can be additional code in blueprints
 }
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Controller::Jump(const FInputActionValue &value)
