@@ -8,7 +8,7 @@
 
 //-------------------------------------------------------------------------------------------------------------
 AAModule_Character_Controller::AAModule_Character_Controller()
- : Module_Character(0),
+ : Is_Camera(false), Module_Character(0),
    Mapping_Context(0), Action_Jump(0), Action_Move(0), Action_Look(0), Action_Zoom(0), Action_Exit(0)
 {
 
@@ -57,8 +57,7 @@ void AAModule_Character_Controller::Look(const FInputActionValue &value)
 {
 	const FVector2D look_axis_vector = value.Get<FVector2D>();
 
-	GetPawn()->AddControllerYawInput(look_axis_vector.X);
-	GetPawn()->AddControllerPitchInput(look_axis_vector.Y);
+	Module_Character->Look(look_axis_vector);
 }
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Controller::Zoom(const FInputActionValue &value)

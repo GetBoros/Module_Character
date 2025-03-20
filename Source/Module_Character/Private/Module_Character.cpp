@@ -59,6 +59,14 @@ void AAModule_Character::NotifyControllerChanged()
 
 }
 //-------------------------------------------------------------------------------------------------------------
+void AAModule_Character::Look(const FVector2D look_axis_vector)
+{
+	AddControllerYawInput(look_axis_vector.X);
+
+	if (!Is_State_Camera)
+		AddControllerPitchInput(look_axis_vector.Y);
+}
+//-------------------------------------------------------------------------------------------------------------
 void AAModule_Character::Zoom(const float step_offset)
 {
 	constexpr float step_min = 10.0f;
@@ -72,8 +80,9 @@ void AAModule_Character::Camera_Exit()
 {
 	Is_State_Camera = false;
 	Camera_Follow->FieldOfView = 90;  // If custom in bp bed
+	Camera_Follow->SetRelativeRotation(FRotator().ZeroRotator);
 	Camera_Boom->TargetArmLength = 400;
-	Camera_Boom->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetIncludingScale);
+	Camera_Boom->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 }
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character::Camera_Switch(const FVector location, const FRotator rotation)

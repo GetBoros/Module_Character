@@ -26,6 +26,7 @@ public:
 	void Jump(const FInputActionValue &value);
 	void Jump_Stop(const FInputActionValue &value);
 
+	bool Is_Camera;
 	AAModule_Character *Module_Character;  // !!! Maybe change to component if need
 
 	UFUNCTION(BlueprintImplementableEvent) void On_Button_Exit();  // BP Event
