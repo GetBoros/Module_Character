@@ -16,7 +16,6 @@ public:
 
 	virtual void BeginPlay();
 	virtual void NotifyControllerChanged();
-	//virtual void SetupPlayerInputComponent(UInputComponent *player_input_component);
 
 	void Look(const FVector2D look_axis_vector);
 	void Zoom(const float step_offset);

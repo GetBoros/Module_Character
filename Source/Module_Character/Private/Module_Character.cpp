@@ -45,7 +45,7 @@ void AAModule_Character::BeginPlay()
 	const USkeletalMeshComponent *skeletal_mesh_component = GetMesh();
 	TArray<FName> bone_names = skeletal_mesh_component->GetAllSocketNames();
 
-	for (const FName &bone: bone_names)
+	for (const FName &bone: bone_names)  // !!!
 	{
 		int yy = 0;
 		yy++;
@@ -56,7 +56,6 @@ void AAModule_Character::BeginPlay()
 void AAModule_Character::NotifyControllerChanged()
 {
 	Super::NotifyControllerChanged();
-
 }
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character::Look(const FVector2D look_axis_vector)
