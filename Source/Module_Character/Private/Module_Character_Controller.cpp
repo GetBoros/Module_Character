@@ -8,7 +8,7 @@
 
 //-------------------------------------------------------------------------------------------------------------
 AAModule_Character_Controller::AAModule_Character_Controller()
- : Is_Camera(false), Module_Character(0),
+ : Is_Camera(false), Module_Character(0), Button_Pressed(EButton_Pressed::EBP_None),
    Mapping_Context(0), Action_Jump(0), Action_Move(0), Action_Look(0), Action_Zoom(0), Action_Exit(0)
 {
 
@@ -38,6 +38,7 @@ void AAModule_Character_Controller::SetupInputComponent()
 	input_component->BindAction(Action_Move, ETriggerEvent::Triggered, this, &AAModule_Character_Controller::Move);
 	input_component->BindAction(Action_Look, ETriggerEvent::Triggered, this, &AAModule_Character_Controller::Look);
 	input_component->BindAction(Action_Zoom, ETriggerEvent::Triggered, this, &AAModule_Character_Controller::Zoom);
+	input_component->BindAction(Action_Mini_Map, ETriggerEvent::Triggered, this, &AAModule_Character_Controller::Mini_Map);
 	input_component->BindAction(Action_Exit, ETriggerEvent::Started, this, &AAModule_Character_Controller::Exit);
 }
 //-------------------------------------------------------------------------------------------------------------
@@ -80,7 +81,15 @@ void AAModule_Character_Controller::Jump(const FInputActionValue &value)
 	Module_Character->Jump();
 }
 //-------------------------------------------------------------------------------------------------------------
+void AAModule_Character_Controller::Mini_Map(const FInputActionValue &value)
+{
+	On_Button_Pressed();
+	Button_Pressed = EButton_Pressed::EBP_Mini_Map;
+	// Open mini map widget
+}
+//-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Controller::Jump_Stop(const FInputActionValue &value)
 {
 	Module_Character->StopJumping();
 }
+//-------------------------------------------------------------------------------------------------------------
