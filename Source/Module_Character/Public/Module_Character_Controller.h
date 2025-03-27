@@ -8,7 +8,8 @@ UENUM(BlueprintType) enum class EButton_Pressed : uint8
 {
 	EBP_None,
 	EBP_Exit,
-	EBP_Mini_Map
+	EBP_Mini_Map,
+	EBP_Interact
 };
 //-------------------------------------------------------------------------------------------------------------
 class UInputMappingContext;
@@ -29,9 +30,10 @@ public:
 	void Move(const FInputActionValue &value);
 	void Look(const FInputActionValue &value);
 	void Zoom(const FInputActionValue &value);  // !!! Can be better | change from Vector2D to something else
-	void Exit(const FInputActionValue &value);  // Restore Boom state || Menu || Q Button |
 	void Jump(const FInputActionValue &value);
+	void Exit(const FInputActionValue &value);  // Restore Boom state || Menu || Q Button |
 	void Mini_Map(const FInputActionValue &value);
+	void Interact(const FInputActionValue &value);
 	void Jump_Stop(const FInputActionValue &value);
 
 	bool Is_Camera;
@@ -49,6 +51,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true") ) UInputAction *Action_Zoom;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true") ) UInputAction *Action_Exit;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true") ) UInputAction *Action_Mini_Map;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true") ) UInputAction *Action_Interact;
 };
 //-------------------------------------------------------------------------------------------------------------
 
@@ -59,9 +62,9 @@ private:
 	- Interact from camera:
 		- Set marks, find items to update quest or else
 
-	- While press M button open and close mini map
-		X - Make input 
-		X - 
+	V - While press M button open and close mini map
+		V - Make input 
+		V - Set widget in BP
 
 	- Door Interaction:
 		- Open, Close, Unlock, Lock, 

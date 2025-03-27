@@ -8,8 +8,8 @@
 
 //-------------------------------------------------------------------------------------------------------------
 AAModule_Character_Controller::AAModule_Character_Controller()
- : Is_Camera(false), Module_Character(0), Button_Pressed(EButton_Pressed::EBP_None),
-   Mapping_Context(0), Action_Jump(0), Action_Move(0), Action_Look(0), Action_Zoom(0), Action_Exit(0)
+ : Is_Camera(false), Module_Character(0), Button_Pressed(EButton_Pressed::EBP_None), Mapping_Context(0),
+   Action_Jump(0), Action_Move(0), Action_Look(0), Action_Zoom(0), Action_Exit(0), Action_Mini_Map(0), Action_Interact(0)
 {
 
 }
@@ -40,6 +40,7 @@ void AAModule_Character_Controller::SetupInputComponent()
 	input_component->BindAction(Action_Zoom, ETriggerEvent::Triggered, this, &AAModule_Character_Controller::Zoom);
 	input_component->BindAction(Action_Mini_Map, ETriggerEvent::Triggered, this, &AAModule_Character_Controller::Mini_Map);
 	input_component->BindAction(Action_Exit, ETriggerEvent::Started, this, &AAModule_Character_Controller::Exit);
+	input_component->BindAction(Action_Interact, ETriggerEvent::Started, this, &AAModule_Character_Controller::Interact);
 }
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Controller::Move(const FInputActionValue &value)
@@ -68,24 +69,30 @@ void AAModule_Character_Controller::Zoom(const FInputActionValue &value)
 	Module_Character->Zoom(look_axis_vector);
 }
 //-------------------------------------------------------------------------------------------------------------
-void AAModule_Character_Controller::Exit(const FInputActionValue &value)
-{
-	if (Module_Character->Is_State_Camera)  // if looked from camera while press Exit button remove state
-		Module_Character->Camera_Exit();
-	else
-		On_Button_Exit();  // Can be additional code in blueprints
-}
-//-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Controller::Jump(const FInputActionValue &value)
 {
 	Module_Character->Jump();
 }
 //-------------------------------------------------------------------------------------------------------------
+void AAModule_Character_Controller::Exit(const FInputActionValue &value)
+{
+	Button_Pressed = EButton_Pressed::EBP_Exit;
+	On_Button_Pressed();  // Can be additional code in blueprints
+
+	if (!Module_Character->Is_State_Camera != true)  // if looked from camera while press Exit button remove state
+		Module_Character->Camera_Exit();
+}
+//-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Controller::Mini_Map(const FInputActionValue &value)
 {
-	On_Button_Pressed();
 	Button_Pressed = EButton_Pressed::EBP_Mini_Map;
-	// Open mini map widget
+	On_Button_Pressed();
+}
+//-------------------------------------------------------------------------------------------------------------
+void AAModule_Character_Controller::Interact(const FInputActionValue &value)
+{
+	Button_Pressed = EButton_Pressed::EBP_Interact;
+	On_Button_Pressed();
 }
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Controller::Jump_Stop(const FInputActionValue &value)
