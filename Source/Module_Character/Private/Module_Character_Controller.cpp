@@ -77,10 +77,11 @@ void AAModule_Character_Controller::Jump(const FInputActionValue &value)
 void AAModule_Character_Controller::Exit(const FInputActionValue &value)
 {
 	Button_Pressed = EButton_Pressed::EBP_Exit;
-	On_Button_Pressed();  // Can be additional code in blueprints
 
 	if (!Module_Character->Is_State_Camera != true)  // if looked from camera while press Exit button remove state
 		Module_Character->Camera_Exit();
+	else
+		On_Button_Pressed();  // Can be additional code in blueprints
 }
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Controller::Mini_Map(const FInputActionValue &value)

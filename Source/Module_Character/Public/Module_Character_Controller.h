@@ -28,7 +28,7 @@ public:
 	virtual void SetupInputComponent();
 
 	void Move(const FInputActionValue &value);
-	void Look(const FInputActionValue &value);
+	void Look(const FInputActionValue &value);  // !!! Maybe change, make another InputComponent for camera or ...
 	void Zoom(const FInputActionValue &value);  // !!! Can be better | change from Vector2D to something else
 	void Jump(const FInputActionValue &value);
 	void Exit(const FInputActionValue &value);  // Restore Boom state || Menu || Q Button |
@@ -59,16 +59,35 @@ private:
 
 #pragma region TASKS
 /*
-	- Interact from camera:
+
+#MAIN
+	X - Add GAS to Module_Character
+
+#MAIN_END
+
+	X - Interact from camera:
 		- Set marks, find items to update quest or else
+	
+	X - How to say controler show interaction widget?
 
-	V - While press M button open and close mini map
-		V - Make input 
-		V - Set widget in BP
+	X - Inventory
 
-	- Door Interaction:
-		- Open, Close, Unlock, Lock, 
-		- If quick E open close, if hold else actions
-		- Talk
+	X - UI to show interactions
+
+	X - Door Interaction:
+		X - Open, Close, Unlock, Lock, 
+		X - If quick E open close, if hold else actions
+		X - Talk
 */
 #pragma endregion
+
+#pragma region TASKS_DONE
+/*
+	V - While press M button open and close mini map
+		V - Make input
+		V - Set widget in BP
+	
+	V - Interaction Button
+*/
+#pragma endregion
+
