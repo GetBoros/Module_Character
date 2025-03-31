@@ -92,6 +92,7 @@ void AAModule_Character_Controller::Mini_Map(const FInputActionValue &value)
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Controller::Interact(const FInputActionValue &value)
 {
+	Module_Character_Player->Interact();
 	Button_Pressed = EButton_Pressed::EBP_Interact;
 	On_Button_Pressed();
 }

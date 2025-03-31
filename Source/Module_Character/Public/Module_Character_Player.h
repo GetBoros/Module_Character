@@ -1,13 +1,59 @@
 #pragma once
 
+#include "Abilities/GameplayAbility.h"
+#include "AbilitySystemComponent.h"
+#include "AttributeSet.h"
 #include "AbilitySystemInterface.h"
+
 #include "GameFramework/Character.h"
 #include "Module_Character_Player.generated.h"
 
 //-------------------------------------------------------------------------------------------------------------
-class UAbilitySystemComponent;
+#define ATTRIBUTE_ACCESSORS(ClassName, PropertyName) \
+    GAMEPLAYATTRIBUTE_PROPERTY_GETTER(ClassName, PropertyName) \
+    GAMEPLAYATTRIBUTE_VALUE_GETTER(PropertyName) \
+    GAMEPLAYATTRIBUTE_VALUE_SETTER(PropertyName) \
+    GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)
+//-------------------------------------------------------------------------------------------------------------
+UCLASS() class UMyCharacterAttributes : public UAttributeSet
+{
+	GENERATED_BODY()
+
+public:
+	UMyCharacterAttributes();
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes") FGameplayAttributeData Health;
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes") FGameplayAttributeData Mana;
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes") FGameplayAttributeData Damage;
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes") FGameplayAttributeData Experience;
+
+	// Репликация
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	// Макросы для доступа к `Experience`
+	ATTRIBUTE_ACCESSORS(UMyCharacterAttributes, Experience)
+};
+//-------------------------------------------------------------------------------------------------------------
+UCLASS() class ULockpickAbility : public UGameplayAbility
+{
+	GENERATED_BODY()
+
+public:
+	ULockpickAbility();
+
+	virtual void ActivateAbility(
+		const FGameplayAbilitySpecHandle Handle,
+		const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo,
+		const FGameplayEventData* TriggerEventData
+	) override;
+
+	void GiveExperience(AActor* PlayerActor);
+};
+//-------------------------------------------------------------------------------------------------------------
 class USpringArmComponent;
 class UCameraComponent;
+class UAbilitySystemComponent;
 //-------------------------------------------------------------------------------------------------------------
 UCLASS() class MODULE_CHARACTER_API AAModule_Character_Player : public ACharacter, public IAbilitySystemInterface
 {
@@ -23,11 +69,13 @@ public:
 	void Look(const FVector2D look_axis_vector);
 	void Zoom(const float step_offset);
 	void Camera_Exit();  // Restore Boom state || Menu || Q Button |
-
+	void Interact();
 
 	bool Is_State_Camera;  // Remove to switch if have more states
 
 	UFUNCTION(BlueprintCallable) void Camera_Switch(const FVector location, const FRotator rotation);
+
+	UPROPERTY() UMyCharacterAttributes *AttributeSet;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Abilities") UAbilitySystemComponent *Ability_System_Component;
 
 private:
@@ -46,8 +94,8 @@ private:
 //------------------------------------------------------------------------------------------------------------
 #pragma region HELP
 /*
-	- Actor, Player(State) can have interface IAbilitySystemInterface to get UAbilitySystemComponent
-	- 
+	- Player #include "AbilitySystemInterface.h" IAbilitySystemInterface to implement UAbilitySystemComponent
+	- UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Abilities") UAbilitySystemComponent *Ab_Sy_Co;
 */
 #pragma endregion
 //------------------------------------------------------------------------------------------------------------

@@ -2,14 +2,117 @@
 #include "Modules/ModuleManager.h"
 
 #include "AbilitySystemComponent.h"
+#include "Net/UnrealNetwork.h"
 
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include <AbilitySystemBlueprintLibrary.h>
 
+// UMyCharacterAttributes
+UMyCharacterAttributes::UMyCharacterAttributes()
+{
+	Health.SetBaseValue(100.0f);
+	Mana.SetBaseValue(50.0f);
+	Damage.SetBaseValue(10.0f);
+}
 //-------------------------------------------------------------------------------------------------------------
+void UMyCharacterAttributes::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION_NOTIFY(UMyCharacterAttributes, Experience, COND_OwnerOnly, REPNOTIFY_Always);
+}
+//-------------------------------------------------------------------------------------------------------------
+
+
+
+
+// ULockpickAbility 
+ULockpickAbility::ULockpickAbility()
+{
+	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
+	SetAssetTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag(FName("Ability.Interact") ) ) );
+}
+//-------------------------------------------------------------------------------------------------------------
+void ULockpickAbility::ActivateAbility(
+	const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo,
+	const FGameplayAbilityActivationInfo ActivationInfo,
+	const FGameplayEventData* TriggerEventData
+)
+{
+	AActor *player = 0;
+	AActor *actor_target;
+	FHitResult hit_result {};
+	FVector start;
+	FVector end;
+	FCollisionQueryParams params;
+
+	if (!CommitAbility(Handle, ActorInfo, ActivationInfo) )
+		return;
+
+	player = ActorInfo->AvatarActor.Get();
+	if (player != 0)
+		UE_LOG(LogTemp, Warning, TEXT("Attack Activated!") );
+
+	if (!HasAuthority(&ActivationInfo) )
+		return;
+
+	if (player != 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s использует LockpickAbility"), *player->GetName() );
+
+		start = player->GetActorLocation();
+		end = start + player->GetActorForwardVector() * 200.0f;  // Луч на 200 см вперед
+		params.AddIgnoredActor(player);
+
+		if (GetWorld()->LineTraceSingleByChannel(hit_result, start, end, ECC_Visibility, params) )
+		{
+			actor_target = hit_result.GetActor();
+			if (actor_target)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Открываем: %s"), *actor_target->GetName() );
+				actor_target->Destroy();  // Здесь может быть вызов анимации открытия
+				GiveExperience(player);
+
+				EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
+			}
+		}
+	}
+}
+//-------------------------------------------------------------------------------------------------------------
+void ULockpickAbility::GiveExperience(AActor* PlayerActor)
+{
+	if (!PlayerActor)
+		return;
+
+	if (UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(PlayerActor))
+	{
+		const UMyCharacterAttributes* ConstAttributes = static_cast<const UMyCharacterAttributes*>(ASC->GetAttributeSet(UMyCharacterAttributes::StaticClass()));
+		if (!ConstAttributes) return;
+
+		// Убираем const, чтобы можно было изменить значение
+		UMyCharacterAttributes* Attributes = const_cast<UMyCharacterAttributes*>(ConstAttributes);
+
+		// Проверяем, что объект есть и увеличиваем опыт
+		if (Attributes)
+		{
+			float NewExp = Attributes->GetExperience() + 10.0f;
+			Attributes->SetExperience(NewExp);
+
+			UE_LOG(LogTemp, Warning, TEXT("%s получил опыт: %.2f"), *PlayerActor->GetName(), NewExp);
+		}
+	}
+}
+//-------------------------------------------------------------------------------------------------------------
+
+
+
+
+// AAModule_Character_Player
 AAModule_Character_Player::AAModule_Character_Player()
  : Is_State_Camera(false), Ability_System_Component(0), Camera_Boom(0), Camera_Follow(0)
 {
@@ -29,7 +132,8 @@ AAModule_Character_Player::AAModule_Character_Player()
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.0f;
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
 
-	Ability_System_Component = CreateDefaultSubobject<UAbilitySystemComponent>("AbilitySystemComponent");
+	AttributeSet = CreateDefaultSubobject<UMyCharacterAttributes>("AttributeSet");
+	Ability_System_Component = CreateDefaultSubobject<UAbilitySystemComponent>("Ability_System_Component");
 
 	Camera_Boom = CreateDefaultSubobject<USpringArmComponent>(TEXT("Camera_Boom") );
 	Camera_Boom->SetupAttachment(RootComponent);
@@ -44,6 +148,10 @@ AAModule_Character_Player::AAModule_Character_Player()
 void AAModule_Character_Player::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (HasAuthority() && Ability_System_Component)
+		Ability_System_Component->GiveAbility(FGameplayAbilitySpec(ULockpickAbility::StaticClass(), 1, 0) );
+
 	const USkeletalMeshComponent *skeletal_mesh_component = GetMesh();
 	TArray<FName> bone_names = skeletal_mesh_component->GetAllSocketNames();
 
@@ -89,6 +197,18 @@ void AAModule_Character_Player::Camera_Exit()
 	Camera_Follow->SetRelativeRotation(FRotator().ZeroRotator);
 	Camera_Boom->TargetArmLength = 400;
 	Camera_Boom->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+}
+//-------------------------------------------------------------------------------------------------------------
+void AAModule_Character_Player::Interact()
+{
+	if (UAbilitySystemComponent *asc = GetAbilitySystemComponent() )  // if GAS added
+	{
+		FGameplayTag tag_interact = FGameplayTag::RequestGameplayTag(FName("Ability.Interact") );  // try to find tag
+		FGameplayAbilitySpec *spec = asc->FindAbilitySpecFromClass(ULockpickAbility::StaticClass() );
+		
+		if (spec && spec->IsActive() == false)
+			asc->TryActivateAbility(spec->Handle);
+	}
 }
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Player::Camera_Switch(const FVector location, const FRotator rotation)
