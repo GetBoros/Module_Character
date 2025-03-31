@@ -14,7 +14,7 @@ UENUM(BlueprintType) enum class EButton_Pressed : uint8
 //-------------------------------------------------------------------------------------------------------------
 class UInputMappingContext;
 class UInputAction;
-class AAModule_Character;
+class AAModule_Character_Player;
 struct FInputActionValue;
 //-------------------------------------------------------------------------------------------------------------
 UCLASS() class MODULE_CHARACTER_API AAModule_Character_Controller : public APlayerController
@@ -37,7 +37,7 @@ public:
 	void Jump_Stop(const FInputActionValue &value);
 
 	bool Is_Camera;
-	AAModule_Character *Module_Character;  // !!! Maybe change to component if need
+	AAModule_Character_Player *Module_Character_Player;  // !!! Maybe change to component if need
 
 	UFUNCTION(BlueprintImplementableEvent) void On_Button_Exit();  // BP Event || REMOVE THIS
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable) void On_Button_Pressed();  // BP Event

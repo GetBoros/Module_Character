@@ -1,6 +1,6 @@
 #include "Module_Character_Controller.h"
 
-#include "Module_Character.h"
+#include "Module_Character_Player.h"
 
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
@@ -8,7 +8,7 @@
 
 //-------------------------------------------------------------------------------------------------------------
 AAModule_Character_Controller::AAModule_Character_Controller()
- : Is_Camera(false), Module_Character(0), Button_Pressed(EButton_Pressed::EBP_None), Mapping_Context(0),
+ : Is_Camera(false), Module_Character_Player(0), Button_Pressed(EButton_Pressed::EBP_None), Mapping_Context(0),
    Action_Jump(0), Action_Move(0), Action_Look(0), Action_Zoom(0), Action_Exit(0), Action_Mini_Map(0), Action_Interact(0)
 {
 
@@ -18,7 +18,7 @@ void AAModule_Character_Controller::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Module_Character = Cast<AAModule_Character>(GetPawn() );
+	Module_Character_Player = Cast<AAModule_Character_Player>(GetPawn() );
 
 	if (UEnhancedInputLocalPlayerSubsystem *sub_system = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer() ) )
 		sub_system->AddMappingContext(Mapping_Context, 0);
@@ -59,27 +59,27 @@ void AAModule_Character_Controller::Look(const FInputActionValue &value)
 {
 	const FVector2D look_axis_vector = value.Get<FVector2D>();
 
-	Module_Character->Look(look_axis_vector);
+	Module_Character_Player->Look(look_axis_vector);
 }
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Controller::Zoom(const FInputActionValue &value)
 {
 	const float look_axis_vector = value.Get<FVector2D>().X * -1;
 
-	Module_Character->Zoom(look_axis_vector);
+	Module_Character_Player->Zoom(look_axis_vector);
 }
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Controller::Jump(const FInputActionValue &value)
 {
-	Module_Character->Jump();
+	Module_Character_Player->Jump();
 }
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Controller::Exit(const FInputActionValue &value)
 {
 	Button_Pressed = EButton_Pressed::EBP_Exit;
 
-	if (!Module_Character->Is_State_Camera != true)  // if looked from camera while press Exit button remove state
-		Module_Character->Camera_Exit();
+	if (!Module_Character_Player->Is_State_Camera != true)  // if looked from camera while press Exit button remove state
+		Module_Character_Player->Camera_Exit();
 	else
 		On_Button_Pressed();  // Can be additional code in blueprints
 }
@@ -98,6 +98,6 @@ void AAModule_Character_Controller::Interact(const FInputActionValue &value)
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Controller::Jump_Stop(const FInputActionValue &value)
 {
-	Module_Character->StopJumping();
+	Module_Character_Player->StopJumping();
 }
 //-------------------------------------------------------------------------------------------------------------
