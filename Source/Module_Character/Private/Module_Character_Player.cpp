@@ -109,10 +109,10 @@ void UAGA_Lockpick::ActivateAbility(const FGameplayAbilitySpecHandle handle, con
 	UE_LOG(LogTemp, Warning, TEXT("Try to open: %s"), *actor_target->GetName() );
 	actor_target->Destroy();  // Destroy box or any item if trace catch
 	EndAbility(handle, actor_info, activation_info, true, false);
-	GiveExperience(player);
+	Experience_Give(player);
 }
 //-------------------------------------------------------------------------------------------------------------
-void UAGA_Lockpick::GiveExperience(AActor *actor)
+void UAGA_Lockpick::Experience_Give(AActor *actor)
 {
 	UAbilitySystemComponent *asc = 0;
 	FGameplayEffectSpecHandle effect_spec {};
@@ -178,20 +178,11 @@ void AAModule_Character_Player::BeginPlay()
 	if (HasAuthority() && Ability_System_Component)
 		Ability_System_Component->GiveAbility(FGameplayAbilitySpec(UAGA_Lockpick::StaticClass(), 1, 0) );
 
-	effect_context = Ability_System_Component->MakeEffectContext();
-	effect_spec = Ability_System_Component->MakeOutgoingSpec(UAGE_Initialize_Attributes::StaticClass(), 1, effect_context);
+	// Load from Module_IO and use Effect to apply
+	effect_context = Ability_System_Component->MakeEffectContext();  // we make context effect
+	effect_spec = Ability_System_Component->MakeOutgoingSpec(UAGE_Initialize_Attributes::StaticClass(), 1, effect_context);  // make spec effect 
 	if (effect_spec.IsValid() )
-		Ability_System_Component->ApplyGameplayEffectSpecToSelf(*effect_spec.Data);
-
-	//const USkeletalMeshComponent *skeletal_mesh_component = GetMesh();
-	//TArray<FName> bone_names = skeletal_mesh_component->GetAllSocketNames();
-
-	//for (const FName &bone: bone_names)  // !!!
-	//{
-	//	int yy = 0;
-	//	yy++;
-	//}
-
+		Ability_System_Component->ApplyGameplayEffectSpecToSelf(*effect_spec.Data);  // и применяем на компоненте
 }
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Player::NotifyControllerChanged()

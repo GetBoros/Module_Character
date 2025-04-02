@@ -22,7 +22,6 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes") FGameplayAttributeData Mana;
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes") FGameplayAttributeData Damage;
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes") FGameplayAttributeData Experience;
-
 };
 //-------------------------------------------------------------------------------------------------------------
 UCLASS() class UAGE_Experience_Gain : public UGameplayEffect
@@ -34,7 +33,8 @@ public:
 };
 //-------------------------------------------------------------------------------------------------------------
 UCLASS() class UAGE_Initialize_Attributes : public UGameplayEffect
-{
+{// Load and set to attribute data
+
 	GENERATED_BODY()
 
 public:
@@ -51,7 +51,7 @@ public:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle handle, const FGameplayAbilityActorInfo *actor_info,
 	const FGameplayAbilityActivationInfo activation_info, const FGameplayEventData *event_data_triger);
 
-	void GiveExperience(AActor* PlayerActor);
+	void Experience_Give(AActor *actor);
 };
 //-------------------------------------------------------------------------------------------------------------
 class USpringArmComponent;
