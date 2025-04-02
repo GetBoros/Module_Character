@@ -9,44 +9,47 @@
 #include "Module_Character_Player.generated.h"
 
 //-------------------------------------------------------------------------------------------------------------
-#define ATTRIBUTE_ACCESSORS(ClassName, PropertyName) \
-    GAMEPLAYATTRIBUTE_PROPERTY_GETTER(ClassName, PropertyName) \
-    GAMEPLAYATTRIBUTE_VALUE_GETTER(PropertyName) \
-    GAMEPLAYATTRIBUTE_VALUE_SETTER(PropertyName) \
-    GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)
-//-------------------------------------------------------------------------------------------------------------
-UCLASS() class UMyCharacterAttributes : public UAttributeSet
+UCLASS() class UAModule_Character_Attribute : public UAttributeSet
 {
 	GENERATED_BODY()
 
 public:
-	UMyCharacterAttributes();
+	UAModule_Character_Attribute();
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes") FGameplayAttributeData Health;
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes") FGameplayAttributeData Mana;
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes") FGameplayAttributeData Damage;
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes") FGameplayAttributeData Experience;
 
-	// Репликация
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
-	// Макросы для доступа к `Experience`
-	ATTRIBUTE_ACCESSORS(UMyCharacterAttributes, Experience)
 };
 //-------------------------------------------------------------------------------------------------------------
-UCLASS() class ULockpickAbility : public UGameplayAbility
+UCLASS() class UAGE_Experience_Gain : public UGameplayEffect
 {
 	GENERATED_BODY()
 
 public:
-	ULockpickAbility();
+	UAGE_Experience_Gain();
+};
+//-------------------------------------------------------------------------------------------------------------
+UCLASS() class UAGE_Initialize_Attributes : public UGameplayEffect
+{
+	GENERATED_BODY()
 
-	virtual void ActivateAbility(
-		const FGameplayAbilitySpecHandle Handle,
-		const FGameplayAbilityActorInfo* ActorInfo,
-		const FGameplayAbilityActivationInfo ActivationInfo,
-		const FGameplayEventData* TriggerEventData
-	) override;
+public:
+	UAGE_Initialize_Attributes();
+};
+//-------------------------------------------------------------------------------------------------------------
+UCLASS() class UAGA_Lockpick: public UGameplayAbility
+{
+	GENERATED_BODY()
+
+public:
+	UAGA_Lockpick();
+
+	virtual void ActivateAbility(const FGameplayAbilitySpecHandle handle, const FGameplayAbilityActorInfo *actor_info,
+	const FGameplayAbilityActivationInfo activation_info, const FGameplayEventData *event_data_triger);
 
 	void GiveExperience(AActor* PlayerActor);
 };
@@ -75,7 +78,7 @@ public:
 
 	UFUNCTION(BlueprintCallable) void Camera_Switch(const FVector location, const FRotator rotation);
 
-	UPROPERTY() UMyCharacterAttributes *AttributeSet;
+	UPROPERTY() UAModule_Character_Attribute *Character_Attribute;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Abilities") UAbilitySystemComponent *Ability_System_Component;
 
 private:
@@ -94,6 +97,7 @@ private:
 //------------------------------------------------------------------------------------------------------------
 #pragma region HELP
 /*
+*	- showdebug abilitysystem
 	- Player #include "AbilitySystemInterface.h" IAbilitySystemInterface to implement UAbilitySystemComponent
 	- UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Abilities") UAbilitySystemComponent *Ab_Sy_Co;
 */
@@ -310,8 +314,8 @@ private:
 	- Implement IAbilitySystemInterface (#include "AbilitySystemInterface.h")
 	- Has UAbilitySystemComponent *AbilitySystemComponent; (#include "AbilitySystemComponent.h")
 		- AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent") );
-	- Has own UMyAttributeSet *AttributeSet; (#include "AttributeSet.h")
-		- AttributeSet = CreateDefaultSubobject<UMyAttributeSet>(TEXT("AttributeSet") );
+	- Has own UMyAttributeSet *Character_Attribute; (#include "AttributeSet.h")
+		- Character_Attribute = CreateDefaultSubobject<UMyAttributeSet>(TEXT("AttributeSet") );
 
  - SPAWN:
 	- AbilitySystemComponent->InitAbilityActorInfo(AActor *, AActor *);
