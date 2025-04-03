@@ -1,6 +1,8 @@
 #include "Module_Character_Player.h"
 #include "Modules/ModuleManager.h"
 
+#include "Module_IO.h"
+
 #include "AbilitySystemComponent.h"
 #include "Net/UnrealNetwork.h"
 
@@ -23,7 +25,8 @@ void UAModule_Character_Attribute::GetLifetimeReplicatedProps(TArray<FLifetimePr
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME_CONDITION_NOTIFY(UAModule_Character_Attribute, Experience, COND_OwnerOnly, REPNOTIFY_Always);
+	//DOREPLIFETIME_CONDITION_NOTIFY(UAModule_Character_Attribute, Experience, COND_OwnerOnly, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UAModule_Character_Attribute, Experience, COND_None, REPNOTIFY_Always);
 }
 //-------------------------------------------------------------------------------------------------------------
 
@@ -41,23 +44,6 @@ UAGE_Experience_Gain::UAGE_Experience_Gain()
 	modifier.ModifierMagnitude = FScalableFloat(give_exp_value);  // value to add to existed base value
 
 	Modifiers.Add(modifier);  // applying
-}
-//-------------------------------------------------------------------------------------------------------------
-
-
-
-
-// UAGE_Initialize_Attributes 
-UAGE_Initialize_Attributes::UAGE_Initialize_Attributes()
-{
-	FGameplayModifierInfo modifier;
-
-	// Устанавливаем начальное значение "Experience"
-	modifier.Attribute = FGameplayAttribute(FindFieldChecked<FProperty>(UAModule_Character_Attribute::StaticClass(), TEXT("Experience") ) );
-	modifier.ModifierOp = EGameplayModOp::Override;
-	modifier.ModifierMagnitude = FScalableFloat(100.0f);  // Начальное значение опыта 100
-
-	Modifiers.Add(modifier);  // Добавляем модификатор в список
 }
 //-------------------------------------------------------------------------------------------------------------
 
@@ -170,19 +156,35 @@ AAModule_Character_Player::AAModule_Character_Player()
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Player::BeginPlay()
 {
-	FGameplayEffectContextHandle effect_context;
-	FGameplayEffectSpecHandle effect_spec;
+	FGameplayEffectContextHandle effect_context {};
+	FGameplayEffectSpecHandle effect_spec {};
+	const FVector player_location_initial { 550.0, 1990.0, 50.0 };
+	const FTransform player_transform = UAModule_IO::Module_IO_Create()->Pawn_Transform_Load();  // load from Module IO last saved player transform
 
 	Super::BeginPlay();
 
+	// 1.0. If loaded non zero transform set prev player transform || not game begining
+	if (player_transform.GetLocation() == FVector::ZeroVector)
+		SetActorLocation(player_location_initial);  // starting point
+	else
+		SetActorTransform(player_transform);  // loaded prev player transform and set it
+
+	// 2.0. GAS | If have asc give ability lockpicking
 	if (HasAuthority() && Ability_System_Component)
 		Ability_System_Component->GiveAbility(FGameplayAbilitySpec(UAGA_Lockpick::StaticClass(), 1, 0) );
 
-	// Load from Module_IO and use Effect to apply
-	effect_context = Ability_System_Component->MakeEffectContext();  // we make context effect
-	effect_spec = Ability_System_Component->MakeOutgoingSpec(UAGE_Initialize_Attributes::StaticClass(), 1, effect_context);  // make spec effect 
-	if (effect_spec.IsValid() )
-		Ability_System_Component->ApplyGameplayEffectSpecToSelf(*effect_spec.Data);  // и применяем на компоненте
+
+
+	// 2.1. GAS | Load from Module_IO and use Effect to apply
+	//effect_context = Ability_System_Component->MakeEffectContext();  // we make context effect
+	//effect_spec = Ability_System_Component->MakeOutgoingSpec(UAGE_Initialize_Attributes::StaticClass(), 1, effect_context);  // make spec effect 
+	//if (effect_spec.IsValid() )
+	//	Ability_System_Component->ApplyGameplayEffectSpecToSelf(*effect_spec.Data);  // и применяем на компоненте
+
+	//Character_Attribute->Experience.SetBaseValue(UAModule_IO::Module_IO_Create()->GAS_Attributes_Load() );
+
+	// !!! Make array and transform || DeepSeek Example
+	Character_Attribute->Experience.SetCurrentValue(UAModule_IO::Module_IO_Create()->GAS_Attributes_Load() );
 }
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Player::NotifyControllerChanged()
@@ -230,6 +232,11 @@ void AAModule_Character_Player::Interact()
 		
 		if (spec && spec->IsActive() == false)
 			asc->TryActivateAbility(spec->Handle);
+
+		float experience = Character_Attribute->Experience.GetBaseValue();
+		UAModule_IO *module_io = UAModule_IO::Module_IO_Create();
+		module_io->GAS_Attributes_Save(experience);
+		module_io->Pawn_Transform_Save(GetTransform() );
 	}
 }
 //-------------------------------------------------------------------------------------------------------------

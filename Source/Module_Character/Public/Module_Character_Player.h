@@ -21,7 +21,14 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes") FGameplayAttributeData Health;
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes") FGameplayAttributeData Mana;
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes") FGameplayAttributeData Damage;
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes") FGameplayAttributeData Experience;
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_Experience) FGameplayAttributeData Experience;
+
+	UFUNCTION()
+	void OnRep_Experience(const FGameplayAttributeData& OldExperience)
+	{
+		GAMEPLAYATTRIBUTE_REPNOTIFY(UAModule_Character_Attribute, Experience, OldExperience);
+	}
+
 };
 //-------------------------------------------------------------------------------------------------------------
 UCLASS() class UAGE_Experience_Gain : public UGameplayEffect
@@ -30,15 +37,6 @@ UCLASS() class UAGE_Experience_Gain : public UGameplayEffect
 
 public:
 	UAGE_Experience_Gain();
-};
-//-------------------------------------------------------------------------------------------------------------
-UCLASS() class UAGE_Initialize_Attributes : public UGameplayEffect
-{// Load and set to attribute data
-
-	GENERATED_BODY()
-
-public:
-	UAGE_Initialize_Attributes();
 };
 //-------------------------------------------------------------------------------------------------------------
 UCLASS() class UAGA_Lockpick: public UGameplayAbility
