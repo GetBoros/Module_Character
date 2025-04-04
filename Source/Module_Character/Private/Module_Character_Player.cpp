@@ -160,6 +160,8 @@ void AAModule_Character_Player::BeginPlay()
 	FGameplayEffectSpecHandle effect_spec {};
 	const FVector player_location_initial { 550.0, 1990.0, 50.0 };
 	const FTransform player_transform = UAModule_IO::Module_IO_Create()->Pawn_Transform_Load();  // load from Module IO last saved player transform
+	UAModule_IO *module_io = 0;
+	TArray<float> player_attributes;
 
 	Super::BeginPlay();
 
@@ -173,18 +175,13 @@ void AAModule_Character_Player::BeginPlay()
 	if (HasAuthority() && Ability_System_Component)
 		Ability_System_Component->GiveAbility(FGameplayAbilitySpec(UAGA_Lockpick::StaticClass(), 1, 0) );
 
-
-
 	// 2.1. GAS | Load from Module_IO and use Effect to apply
-	//effect_context = Ability_System_Component->MakeEffectContext();  // we make context effect
-	//effect_spec = Ability_System_Component->MakeOutgoingSpec(UAGE_Initialize_Attributes::StaticClass(), 1, effect_context);  // make spec effect 
-	//if (effect_spec.IsValid() )
-	//	Ability_System_Component->ApplyGameplayEffectSpecToSelf(*effect_spec.Data);  // и применяем на компоненте
-
-	//Character_Attribute->Experience.SetBaseValue(UAModule_IO::Module_IO_Create()->GAS_Attributes_Load() );
-
-	// !!! Make array and transform || DeepSeek Example
-	Character_Attribute->Experience.SetCurrentValue(UAModule_IO::Module_IO_Create()->GAS_Attributes_Load() );
+	module_io = UAModule_IO::Module_IO_Create();
+	player_attributes = module_io->GAS_Attributes_Load();
+	Character_Attribute->Health.SetCurrentValue(player_attributes[0]);
+	Character_Attribute->Mana.SetCurrentValue(player_attributes[1]);
+	Character_Attribute->Damage.SetCurrentValue(player_attributes[2]);
+	Character_Attribute->Experience.SetCurrentValue(player_attributes[3]);
 }
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Player::NotifyControllerChanged()
@@ -225,6 +222,9 @@ void AAModule_Character_Player::Camera_Exit()
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Player::Interact()
 {
+	TArray<float> player_attributes;
+	UAModule_IO *module_io = 0;
+
 	if (UAbilitySystemComponent *asc = GetAbilitySystemComponent() )  // if GAS added
 	{
 		FGameplayTag tag_interact = FGameplayTag::RequestGameplayTag(FName("Ability.Interact") );  // try to find tag
@@ -232,12 +232,18 @@ void AAModule_Character_Player::Interact()
 		
 		if (spec && spec->IsActive() == false)
 			asc->TryActivateAbility(spec->Handle);
-
-		float experience = Character_Attribute->Experience.GetBaseValue();
-		UAModule_IO *module_io = UAModule_IO::Module_IO_Create();
-		module_io->GAS_Attributes_Save(experience);
-		module_io->Pawn_Transform_Save(GetTransform() );
 	}
+
+	module_io = UAModule_IO::Module_IO_Create();
+	player_attributes.SetNumZeroed(4);
+
+	player_attributes[0] = Character_Attribute->Health.GetCurrentValue();
+	player_attributes[1] = Character_Attribute->Mana.GetCurrentValue();
+	player_attributes[2] = Character_Attribute->Damage.GetCurrentValue();
+	player_attributes[3] = Character_Attribute->Experience.GetCurrentValue();
+
+	module_io->GAS_Attributes_Save(player_attributes);
+	module_io->Pawn_Transform_Save(GetTransform() );
 }
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Player::Camera_Switch(const FVector location, const FRotator rotation)

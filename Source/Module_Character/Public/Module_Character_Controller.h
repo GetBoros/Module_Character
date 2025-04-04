@@ -61,7 +61,6 @@ private:
 /*
 
 #MAIN
-	X - Add GAS to Module_Character
 
 #MAIN_END
 
@@ -88,6 +87,8 @@ private:
 		V - Set widget in BP
 	
 	V - Interaction Button
+	V - Add GAS to Module_Character
+
 */
 #pragma endregion
 
