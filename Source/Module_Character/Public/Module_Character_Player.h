@@ -71,6 +71,9 @@ public:
 	void Zoom(const float step_offset);
 	void Camera_Exit();  // Restore Boom state || Menu || Q Button |
 	void Interact();
+	void Character_Attribute_Save();
+	void Character_Attribute_Save_Ext();
+	void Character_Attribute_Load();
 
 	bool Is_State_Camera;  // Remove to switch if have more states
 

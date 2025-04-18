@@ -37,8 +37,8 @@ public:
 	void Interact(const FInputActionValue &value);
 	void Jump_Stop(const FInputActionValue &value);
 
-	bool Is_Camera;
 	AAModule_Character_Player *Module_Character_Player;  // !!! Maybe change to component if need
+	bool Is_Camera;
 
 	UFUNCTION(BlueprintImplementableEvent) void On_Button_Exit();  // BP Event || REMOVE THIS
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable) void On_Button_Pressed();  // BP Event

@@ -160,8 +160,6 @@ void AAModule_Character_Player::BeginPlay()
 	FGameplayEffectSpecHandle effect_spec {};
 	const FVector player_location_initial { 550.0, 1990.0, 50.0 };
 	const FTransform player_transform = UAModule_IO::Module_IO_Create()->Pawn_Transform_Load();  // load from Module IO last saved player transform
-	UAModule_IO *module_io = 0;
-	TArray<float> player_attributes;
 
 	Super::BeginPlay();
 
@@ -176,12 +174,7 @@ void AAModule_Character_Player::BeginPlay()
 		Ability_System_Component->GiveAbility(FGameplayAbilitySpec(UAGA_Lockpick::StaticClass(), 1, 0) );
 
 	// 2.1. GAS | Load from Module_IO and use Effect to apply
-	module_io = UAModule_IO::Module_IO_Create();
-	player_attributes = module_io->GAS_Attributes_Load();
-	Character_Attribute->Health.SetCurrentValue(player_attributes[0]);
-	Character_Attribute->Mana.SetCurrentValue(player_attributes[1]);
-	Character_Attribute->Damage.SetCurrentValue(player_attributes[2]);
-	Character_Attribute->Experience.SetCurrentValue(player_attributes[3]);
+	Character_Attribute_Load();
 }
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Player::NotifyControllerChanged()
@@ -222,8 +215,6 @@ void AAModule_Character_Player::Camera_Exit()
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Player::Interact()
 {
-	TArray<float> player_attributes;
-	UAModule_IO *module_io = 0;
 
 	if (UAbilitySystemComponent *asc = GetAbilitySystemComponent() )  // if GAS added
 	{
@@ -234,6 +225,14 @@ void AAModule_Character_Player::Interact()
 			asc->TryActivateAbility(spec->Handle);
 	}
 
+	Character_Attribute_Save_Ext();  // !!! TEMP
+}
+//-------------------------------------------------------------------------------------------------------------
+void AAModule_Character_Player::Character_Attribute_Save()
+{
+	UAModule_IO *module_io = 0;
+	TArray<float> player_attributes;
+	
 	module_io = UAModule_IO::Module_IO_Create();
 	player_attributes.SetNumZeroed(4);
 
@@ -244,6 +243,48 @@ void AAModule_Character_Player::Interact()
 
 	module_io->GAS_Attributes_Save(player_attributes);
 	module_io->Pawn_Transform_Save(GetTransform() );
+}
+//-------------------------------------------------------------------------------------------------------------
+void AAModule_Character_Player::Character_Attribute_Save_Ext()
+{
+	constexpr int32 array_size = 4;  // 4 attributes change to enum
+	int32 index = 0;
+	UObject *obj = 0;
+	UClass *class_info = 0;
+	UAModule_IO *module_io = 0;
+	FProperty *property = 0;
+	FGameplayAttributeData *character_attributes = 0;
+	TArray<float> player_attributes;
+	
+	obj = Character_Attribute;
+	class_info = obj->GetClass();
+	module_io = UAModule_IO::Module_IO_Create();
+	player_attributes.SetNumZeroed(array_size);
+
+	for (property = class_info->PropertyLink; property != 0; property = property->PropertyLinkNext)
+	{
+		if (property->IsA<FStructProperty>() && CastField<FStructProperty>(property)->Struct == FGameplayAttributeData::StaticStruct() )
+		{
+			character_attributes = property->ContainerPtrToValuePtr<FGameplayAttributeData>(obj);
+			if (character_attributes != 0)
+				player_attributes[index++] = character_attributes->GetCurrentValue();
+		}
+	}
+
+	module_io->GAS_Attributes_Save(player_attributes);
+	module_io->Pawn_Transform_Save(GetTransform() );
+}
+//-------------------------------------------------------------------------------------------------------------
+void AAModule_Character_Player::Character_Attribute_Load()
+{
+	TArray<float> player_attributes;
+
+	UAModule_IO::Module_IO_Create()->GAS_Attributes_Load(player_attributes);
+
+	Character_Attribute->Health.SetCurrentValue( player_attributes[0]);
+	Character_Attribute->Mana.SetCurrentValue( player_attributes[1]);
+	Character_Attribute->Damage.SetCurrentValue( player_attributes[2]);
+	Character_Attribute->Experience.SetCurrentValue( player_attributes[3]);
 }
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Player::Camera_Switch(const FVector location, const FRotator rotation)

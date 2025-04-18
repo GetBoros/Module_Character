@@ -8,7 +8,7 @@
 
 //-------------------------------------------------------------------------------------------------------------
 AAModule_Character_Controller::AAModule_Character_Controller()
- : Is_Camera(false), Module_Character_Player(0), Button_Pressed(EButton_Pressed::EBP_None), Mapping_Context(0),
+ : Module_Character_Player(0), Is_Camera(false), Button_Pressed(EButton_Pressed::EBP_None), Mapping_Context(0),
    Action_Jump(0), Action_Move(0), Action_Look(0), Action_Zoom(0), Action_Exit(0), Action_Mini_Map(0), Action_Interact(0)
 {
 
