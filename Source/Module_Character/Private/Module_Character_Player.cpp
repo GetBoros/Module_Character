@@ -16,15 +16,12 @@
 // UAModule_Character_Attribute
 UAModule_Character_Attribute::UAModule_Character_Attribute()
 {
-	Health.SetBaseValue(100.0f);
-	Mana.SetBaseValue(50.0f);
-	Damage.SetBaseValue(10.0f);
+
 }
 //-------------------------------------------------------------------------------------------------------------
 void UAModule_Character_Attribute::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
 	//DOREPLIFETIME_CONDITION_NOTIFY(UAModule_Character_Attribute, Experience, COND_OwnerOnly, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UAModule_Character_Attribute, Experience, COND_None, REPNOTIFY_Always);
 }
@@ -33,14 +30,57 @@ void UAModule_Character_Attribute::GetLifetimeReplicatedProps(TArray<FLifetimePr
 
 
 // UAGE_Experience_Gain
+UAGE_Loaded_Attributes::UAGE_Loaded_Attributes()
+{
+	DurationPolicy = EGameplayEffectDurationType::Instant;
+	Update();
+}
+//-------------------------------------------------------------------------------------------------------------
+void UAGE_Loaded_Attributes::Update()
+{
+	FProperty* test;
+	constexpr float give_exp_value = 3.0f;
+	FGameplayModifierInfo modifier;
+	TArray<float> player_attributes;
+
+	UAModule_IO::Module_IO_Create()->GAS_Attributes_Load(player_attributes);
+
+	Modifiers.Empty();
+
+	test = FindFieldChecked<FProperty>(UAModule_Character_Attribute::StaticClass(), TEXT("Experience"));
+	if (test == 0)
+		return;
+	modifier.Attribute = FGameplayAttribute(test);  // try find and access attribute
+	modifier.ModifierOp = EGameplayModOp::Additive;
+	modifier.ModifierMagnitude = FScalableFloat(player_attributes[3]);  // value to add to existed base value
+
+	Modifiers.Add(modifier);  // applying
+}
+//-------------------------------------------------------------------------------------------------------------
+
+
+
+
+// UAGE_Experience_Gain
 UAGE_Experience_Gain::UAGE_Experience_Gain()
 {
-	constexpr float give_exp_value = 10.0f;
-	FGameplayModifierInfo modifier;
 	DurationPolicy = EGameplayEffectDurationType::Instant;
+	Update();
+}
+//-------------------------------------------------------------------------------------------------------------
+void UAGE_Experience_Gain::Update()
+{
+	FProperty *test;
+	constexpr float give_exp_value = 3.0f;
+	FGameplayModifierInfo modifier;
 
-	modifier.Attribute = FGameplayAttribute(FindFieldChecked<FProperty>(UAModule_Character_Attribute::StaticClass(), TEXT("Experience") ) );  // try find and access attribute
-	modifier.ModifierOp = EGameplayModOp::Additive;  // add to existing value
+	Modifiers.Empty();
+
+	test = FindFieldChecked<FProperty>(UAModule_Character_Attribute::StaticClass(), TEXT("Experience") );
+	if (test == 0)
+		return;
+	modifier.Attribute = FGameplayAttribute(test);  // try find and access attribute
+	modifier.ModifierOp = EGameplayModOp::Additive;
 	modifier.ModifierMagnitude = FScalableFloat(give_exp_value);  // value to add to existed base value
 
 	Modifiers.Add(modifier);  // applying
@@ -60,48 +100,40 @@ UAGA_Lockpick::UAGA_Lockpick()
 void UAGA_Lockpick::ActivateAbility(const FGameplayAbilitySpecHandle handle, const FGameplayAbilityActorInfo *actor_info,
 	const FGameplayAbilityActivationInfo activation_info, const FGameplayEventData *event_data_triger)
 {
-	AActor *player = 0;
-	AActor *actor_target;
-	FHitResult hit_result {};
-	FVector start {};
-	FVector end {};
-	FCollisionQueryParams params {};
+	AActor *player, *target;
+	FVector player_location, offset_location;
+	FHitResult hit_result;
+	FCollisionQueryParams collision_query;
 
 	if (!CommitAbility(handle, actor_info, activation_info) )
 		return;
 
+	if (HasAuthority(&activation_info) == false)
+		return;
+	
 	player = actor_info->AvatarActor.Get();
-	if (player != 0)
-		UE_LOG(LogTemp, Warning, TEXT("Attack Activated!") );
-
-	if (!HasAuthority(&activation_info) )
+	if (player == 0)
 		return;
 
-	if (!player != 0)
+	player_location = player->GetActorLocation();
+	offset_location = player_location + player->GetActorForwardVector() * 200.0f;  // trace at 200 centimetr
+	collision_query.AddIgnoredActor(player);
+	if (GetWorld()->LineTraceSingleByChannel(hit_result, player_location, offset_location, ECC_Visibility, collision_query) != true)
+		return;
+	
+	target = hit_result.GetActor();
+	if (!target != 0)
 		return;
 
-	UE_LOG(LogTemp, Warning, TEXT("%s used LockpickAbility"), *player->GetName() );
-
-	start = player->GetActorLocation();
-	end = start + player->GetActorForwardVector() * 200.0f;  // trace at 200 centimetr
-	params.AddIgnoredActor(player);
-
-	if (GetWorld()->LineTraceSingleByChannel(hit_result, start, end, ECC_Visibility, params) != true)
-		return;
-	actor_target = hit_result.GetActor();
-	if (!actor_target != 0)
-		return;
-
-	UE_LOG(LogTemp, Warning, TEXT("Try to open: %s"), *actor_target->GetName() );
-	actor_target->Destroy();  // Destroy box or any item if trace catch
-	EndAbility(handle, actor_info, activation_info, true, false);
+	target->Destroy();  // Destroy box or any item if trace catch
 	Experience_Give(player);
+	EndAbility(handle, actor_info, activation_info, true, false);
 }
 //-------------------------------------------------------------------------------------------------------------
 void UAGA_Lockpick::Experience_Give(AActor *actor)
 {
-	UAbilitySystemComponent *asc = 0;
-	FGameplayEffectSpecHandle effect_spec {};
+	UAbilitySystemComponent *asc;
+	FGameplayEffectSpecHandle effect_spec;
 
 	if (!actor != 0)
 		return;
@@ -110,7 +142,7 @@ void UAGA_Lockpick::Experience_Give(AActor *actor)
 	if (!asc != 0)
 		return;
 
-	effect_spec = asc->MakeOutgoingSpec(UAGE_Experience_Gain::StaticClass(), 1, asc->MakeEffectContext() );
+	effect_spec = asc->MakeOutgoingSpec(UAGE_Experience_Gain::StaticClass(), 1.0f, asc->MakeEffectContext() );
 	if (!effect_spec.IsValid() )
 		return;
 
@@ -215,17 +247,20 @@ void AAModule_Character_Player::Camera_Exit()
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Player::Interact()
 {
+	UAbilitySystemComponent *ability_sys_component;
+	FGameplayAbilitySpec *lock_pick;
 
-	if (UAbilitySystemComponent *asc = GetAbilitySystemComponent() )  // if GAS added
-	{
-		FGameplayTag tag_interact = FGameplayTag::RequestGameplayTag(FName("Ability.Interact") );  // try to find tag
-		FGameplayAbilitySpec *spec = asc->FindAbilitySpecFromClass(UAGA_Lockpick::StaticClass() );
-		
-		if (spec && spec->IsActive() == false)
-			asc->TryActivateAbility(spec->Handle);
-	}
+	ability_sys_component = GetAbilitySystemComponent();
+	if (ability_sys_component == 0)  // if GAS added
+		return;
 
-	Character_Attribute_Save_Ext();  // !!! TEMP
+	lock_pick = ability_sys_component->FindAbilitySpecFromClass(UAGA_Lockpick::StaticClass() );
+	if (lock_pick == 0 && lock_pick->IsActive() != false)
+		return;
+
+	ability_sys_component->TryActivateAbility(lock_pick->Handle);
+	
+	Character_Attribute_Save_Ext();  // !!! TEMP 
 }
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Player::Character_Attribute_Save()
@@ -248,14 +283,16 @@ void AAModule_Character_Player::Character_Attribute_Save()
 void AAModule_Character_Player::Character_Attribute_Save_Ext()
 {
 	constexpr int32 array_size = 4;  // 4 attributes change to enum
-	int32 index = 0;
-	UObject *obj = 0;
-	UClass *class_info = 0;
-	UAModule_IO *module_io = 0;
-	FProperty *property = 0;
-	FGameplayAttributeData *character_attributes = 0;
+	int32 index;
+
+	UObject *obj;
+	const UClass *class_info;
+	UAModule_IO *module_io;
+	FProperty *property;
+	FGameplayAttributeData *character_attributes;
 	TArray<float> player_attributes;
-	
+
+	index = 0;
 	obj = Character_Attribute;
 	class_info = obj->GetClass();
 	module_io = UAModule_IO::Module_IO_Create();
@@ -263,12 +300,17 @@ void AAModule_Character_Player::Character_Attribute_Save_Ext()
 
 	for (property = class_info->PropertyLink; property != 0; property = property->PropertyLinkNext)
 	{
-		if (property->IsA<FStructProperty>() && CastField<FStructProperty>(property)->Struct == FGameplayAttributeData::StaticStruct() )
-		{
-			character_attributes = property->ContainerPtrToValuePtr<FGameplayAttributeData>(obj);
-			if (character_attributes != 0)
-				player_attributes[index++] = character_attributes->GetCurrentValue();
-		}
+		if (property->IsA<FStructProperty>() == 0)  // if param not struct
+			return;
+		
+		if (CastField<FStructProperty>(property)->Struct == FGameplayAttributeData::StaticStruct() == 0)  // if struct not FGameplayAttributeData
+			return;
+		
+		character_attributes = property->ContainerPtrToValuePtr<FGameplayAttributeData>(obj);  // 
+		if (character_attributes == 0)
+			return;
+
+		player_attributes[index++] = character_attributes->GetCurrentValue();
 	}
 
 	module_io->GAS_Attributes_Save(player_attributes);
@@ -277,14 +319,25 @@ void AAModule_Character_Player::Character_Attribute_Save_Ext()
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Player::Character_Attribute_Load()
 {
-	TArray<float> player_attributes;
+	UAGE_Loaded_Attributes *loaded_attributes_effect;
+	FGameplayEffectContextHandle effect_context;
+	FActiveGameplayEffectHandle effect_active_handler;
 
-	UAModule_IO::Module_IO_Create()->GAS_Attributes_Load(player_attributes);
+	if (!GetAbilitySystemComponent() )
+		return;
 
-	Character_Attribute->Health.SetCurrentValue( player_attributes[0]);
-	Character_Attribute->Mana.SetCurrentValue( player_attributes[1]);
-	Character_Attribute->Damage.SetCurrentValue( player_attributes[2]);
-	Character_Attribute->Experience.SetCurrentValue( player_attributes[3]);
+	loaded_attributes_effect = NewObject<UAGE_Loaded_Attributes>(this);
+	if (loaded_attributes_effect == 0)
+		return;
+	loaded_attributes_effect->Update();
+
+	effect_context = GetAbilitySystemComponent()->MakeEffectContext();
+	effect_context.AddSourceObject(this);
+
+	effect_active_handler = GetAbilitySystemComponent()->ApplyGameplayEffectToSelf(loaded_attributes_effect, 1, effect_context);
+
+	if (!effect_active_handler.IsValid() )
+		UE_LOG(LogTemp, Error, TEXT("Failed to apply loaded_attributes_effect!") );
 }
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Player::Camera_Switch(const FVector location, const FRotator rotation)

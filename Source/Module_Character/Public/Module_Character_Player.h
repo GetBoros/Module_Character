@@ -18,17 +18,40 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes") FGameplayAttributeData Health;
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes") FGameplayAttributeData Mana;
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes") FGameplayAttributeData Damage;
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_Health) FGameplayAttributeData Health;
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_Mana) FGameplayAttributeData Mana;
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_Damage) FGameplayAttributeData Damage;
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_Experience) FGameplayAttributeData Experience;
 
-	UFUNCTION()
-	void OnRep_Experience(const FGameplayAttributeData& OldExperience)
+	UFUNCTION() void OnRep_Health(const FGameplayAttributeData &OldExperience)
+	{
+		GAMEPLAYATTRIBUTE_REPNOTIFY(UAModule_Character_Attribute, Health, OldExperience);
+	}
+
+	UFUNCTION() void OnRep_Mana(const FGameplayAttributeData &OldExperience)
+	{
+		GAMEPLAYATTRIBUTE_REPNOTIFY(UAModule_Character_Attribute, Mana, OldExperience);
+	}
+
+	UFUNCTION() void OnRep_Damage(const FGameplayAttributeData &OldExperience)
+	{
+		GAMEPLAYATTRIBUTE_REPNOTIFY(UAModule_Character_Attribute, Damage, OldExperience);
+	}
+
+	UFUNCTION() void OnRep_Experience(const FGameplayAttributeData &OldExperience)
 	{
 		GAMEPLAYATTRIBUTE_REPNOTIFY(UAModule_Character_Attribute, Experience, OldExperience);
 	}
+};
+//-------------------------------------------------------------------------------------------------------------
+UCLASS() class UAGE_Loaded_Attributes : public UGameplayEffect
+{
+	GENERATED_BODY()
 
+public:
+	UAGE_Loaded_Attributes();
+
+	void Update();
 };
 //-------------------------------------------------------------------------------------------------------------
 UCLASS() class UAGE_Experience_Gain : public UGameplayEffect
@@ -37,6 +60,8 @@ UCLASS() class UAGE_Experience_Gain : public UGameplayEffect
 
 public:
 	UAGE_Experience_Gain();
+
+	void Update();
 };
 //-------------------------------------------------------------------------------------------------------------
 UCLASS() class UAGA_Lockpick: public UGameplayAbility
