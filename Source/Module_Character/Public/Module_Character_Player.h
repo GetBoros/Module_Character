@@ -96,21 +96,20 @@ public:
 	void Zoom(const float step_offset);
 	void Camera_Exit();  // Restore Boom state || Menu || Q Button |
 	void Interact();
-	void Character_Attribute_Save();
-	void Character_Attribute_Save_Ext();
-	void Character_Attribute_Load();
+
+	void Abilities_Handler();
+	void Attribute_Save();
+	void Attribute_Load();
 
 	bool Is_State_Camera;  // Remove to switch if have more states
 
-	UFUNCTION(BlueprintCallable) void Camera_Switch(const FVector location, const FRotator rotation);
-
-	UPROPERTY() UAModule_Character_Attribute *Character_Attribute;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Abilities") UAbilitySystemComponent *Ability_System_Component;
-
-private:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true") ) USpringArmComponent *Camera_Boom;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true") ) UCameraComponent *Camera_Follow;
-
+private:  // !!! Prototype properties changes after to best result
+	UFUNCTION(BlueprintCallable, Category = "Camera", meta = (AllowPrivateAccess = "true") ) void Camera_Switch(const FVector location, const FRotator rotation);
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Abilitys, meta = (AllowPrivateAccess = "true") ) TObjectPtr<UAModule_Character_Attribute> Attributes;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Abilitys, meta = (AllowPrivateAccess = "true") ) TObjectPtr<UAbilitySystemComponent> Ability_System_Component;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowPrivateAccess = "true") ) TObjectPtr<USpringArmComponent> Camera_Boom;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowPrivateAccess = "true") ) TObjectPtr<UCameraComponent> Camera_Follow;
 };
 //-------------------------------------------------------------------------------------------------------------
 
@@ -340,8 +339,8 @@ private:
 	- Implement IAbilitySystemInterface (#include "AbilitySystemInterface.h")
 	- Has UAbilitySystemComponent *AbilitySystemComponent; (#include "AbilitySystemComponent.h")
 		- AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent") );
-	- Has own UMyAttributeSet *Character_Attribute; (#include "AttributeSet.h")
-		- Character_Attribute = CreateDefaultSubobject<UMyAttributeSet>(TEXT("AttributeSet") );
+	- Has own UMyAttributeSet *Attributes; (#include "AttributeSet.h")
+		- Attributes = CreateDefaultSubobject<UMyAttributeSet>(TEXT("AttributeSet") );
 
  - SPAWN:
 	- AbilitySystemComponent->InitAbilityActorInfo(AActor *, AActor *);
