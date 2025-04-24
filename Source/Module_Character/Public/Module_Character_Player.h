@@ -1,85 +1,14 @@
 #pragma once
 
-#include "Abilities/GameplayAbility.h"
-#include "AbilitySystemComponent.h"
-#include "AttributeSet.h"
 #include "AbilitySystemInterface.h"
 
 #include "GameFramework/Character.h"
 #include "Module_Character_Player.generated.h"
 
-//-------------------------------------------------------------------------------------------------------------
-UCLASS() class UAModule_Character_Attribute : public UAttributeSet
-{
-	GENERATED_BODY()
-
-public:
-	UAModule_Character_Attribute();
-
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_Health) FGameplayAttributeData Health;
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_Mana) FGameplayAttributeData Mana;
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_Damage) FGameplayAttributeData Damage;
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_Experience) FGameplayAttributeData Experience;
-
-	UFUNCTION() void OnRep_Health(const FGameplayAttributeData &OldExperience)
-	{
-		GAMEPLAYATTRIBUTE_REPNOTIFY(UAModule_Character_Attribute, Health, OldExperience);
-	}
-
-	UFUNCTION() void OnRep_Mana(const FGameplayAttributeData &OldExperience)
-	{
-		GAMEPLAYATTRIBUTE_REPNOTIFY(UAModule_Character_Attribute, Mana, OldExperience);
-	}
-
-	UFUNCTION() void OnRep_Damage(const FGameplayAttributeData &OldExperience)
-	{
-		GAMEPLAYATTRIBUTE_REPNOTIFY(UAModule_Character_Attribute, Damage, OldExperience);
-	}
-
-	UFUNCTION() void OnRep_Experience(const FGameplayAttributeData &OldExperience)
-	{
-		GAMEPLAYATTRIBUTE_REPNOTIFY(UAModule_Character_Attribute, Experience, OldExperience);
-	}
-};
-//-------------------------------------------------------------------------------------------------------------
-UCLASS() class UAGE_Loaded_Attributes : public UGameplayEffect
-{
-	GENERATED_BODY()
-
-public:
-	UAGE_Loaded_Attributes();
-
-	void Update();
-};
-//-------------------------------------------------------------------------------------------------------------
-UCLASS() class UAGE_Experience_Gain : public UGameplayEffect
-{
-	GENERATED_BODY()
-
-public:
-	UAGE_Experience_Gain();
-
-	void Update();
-};
-//-------------------------------------------------------------------------------------------------------------
-UCLASS() class UAGA_Lockpick: public UGameplayAbility
-{
-	GENERATED_BODY()
-
-public:
-	UAGA_Lockpick();
-
-	virtual void ActivateAbility(const FGameplayAbilitySpecHandle handle, const FGameplayAbilityActorInfo *actor_info,
-	const FGameplayAbilityActivationInfo activation_info, const FGameplayEventData *event_data_triger);
-
-	void Experience_Give(AActor *actor);
-};
-//-------------------------------------------------------------------------------------------------------------
 class USpringArmComponent;
 class UCameraComponent;
 class UAbilitySystemComponent;
+class UAModule_Character_Attribute;
 //-------------------------------------------------------------------------------------------------------------
 UCLASS() class MODULE_CHARACTER_API AAModule_Character_Player : public ACharacter, public IAbilitySystemInterface
 {
@@ -97,16 +26,16 @@ public:
 	void Camera_Exit();  // Restore Boom state || Menu || Q Button |
 	void Interact();
 
-	void Abilities_Handler();
-	void Attribute_Save();
-	void Attribute_Load();
+	void Abilities_Handler(const bool is_lock_pick);  // When press any button can handle which ability need to use
+	void Attribute_Save();  // Make abilities?
+	void Attribute_Load();  // Make abilities?
 
 	bool Is_State_Camera;  // Remove to switch if have more states
 
 private:  // !!! Prototype properties changes after to best result
 	UFUNCTION(BlueprintCallable, Category = "Camera", meta = (AllowPrivateAccess = "true") ) void Camera_Switch(const FVector location, const FRotator rotation);
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Abilitys, meta = (AllowPrivateAccess = "true") ) TObjectPtr<UAModule_Character_Attribute> Attributes;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Abilitys, meta = (AllowPrivateAccess = "true") ) TObjectPtr<UAModule_Character_Attribute> Attributes;  // Can be stats
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Abilitys, meta = (AllowPrivateAccess = "true") ) TObjectPtr<UAbilitySystemComponent> Ability_System_Component;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowPrivateAccess = "true") ) TObjectPtr<USpringArmComponent> Camera_Boom;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowPrivateAccess = "true") ) TObjectPtr<UCameraComponent> Camera_Follow;

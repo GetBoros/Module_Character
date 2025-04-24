@@ -1,162 +1,11 @@
 #include "Module_Character_Player.h"
-#include "Modules/ModuleManager.h"
+#include "Module_Character.h"
 
-#include "Module_IO.h"
-
-#include "AbilitySystemComponent.h"
-#include "Net/UnrealNetwork.h"
-
-#include "Camera/CameraComponent.h"
-#include "Components/CapsuleComponent.h"
-#include "Components/SkeletalMeshComponent.h"
-#include "GameFramework/CharacterMovementComponent.h"
-#include "GameFramework/SpringArmComponent.h"
-#include <AbilitySystemBlueprintLibrary.h>
-
-// UAModule_Character_Attribute
-UAModule_Character_Attribute::UAModule_Character_Attribute()
-{
-
-}
-//-------------------------------------------------------------------------------------------------------------
-void UAModule_Character_Attribute::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	//DOREPLIFETIME_CONDITION_NOTIFY(UAModule_Character_Attribute, Experience, COND_OwnerOnly, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(UAModule_Character_Attribute, Experience, COND_None, REPNOTIFY_Always);
-}
-//-------------------------------------------------------------------------------------------------------------
-
-
-
-// UAGE_Experience_Gain
-UAGE_Loaded_Attributes::UAGE_Loaded_Attributes()
-{
-	DurationPolicy = EGameplayEffectDurationType::Instant;
-}
-//-------------------------------------------------------------------------------------------------------------
-void UAGE_Loaded_Attributes::Update()
-{
-	int32 attribute_index = 0;
-	TArray<float> player_attributes;
-	FProperty *prop_attribute;
-	
-	UAModule_IO::Module_IO_Create()->GAS_Attributes_Load(player_attributes);
-	
-	for (TFieldIterator<FProperty> prop_iterator(UAModule_Character_Attribute::StaticClass() ); prop_iterator; ++prop_iterator)
-	{
-		prop_attribute = *prop_iterator;
-		if (prop_attribute == 0 || attribute_index >= player_attributes.Num() )
-			break;
-
-		Modifiers.Add(FGameplayModifierInfo
-			{
-				.Attribute = FGameplayAttribute(prop_attribute),
-				.ModifierOp = EGameplayModOp::Additive,
-				.ModifierMagnitude = FScalableFloat(player_attributes[attribute_index++])
-			});
-	}
-}
-//-------------------------------------------------------------------------------------------------------------
-
-
-
-
-// UAGE_Experience_Gain
-UAGE_Experience_Gain::UAGE_Experience_Gain()
-{
-	DurationPolicy = EGameplayEffectDurationType::Instant;
-	Update();
-}
-//-------------------------------------------------------------------------------------------------------------
-void UAGE_Experience_Gain::Update()
-{
-	FProperty *test;
-	constexpr float give_exp_value = 3.0f;
-	FGameplayModifierInfo modifier;
-
-	Modifiers.Empty();
-
-	test = FindFieldChecked<FProperty>(UAModule_Character_Attribute::StaticClass(), TEXT("Experience") );
-	if (test == 0)
-		return;
-	modifier.Attribute = FGameplayAttribute(test);  // try find and access attribute
-	modifier.ModifierOp = EGameplayModOp::Additive;
-	modifier.ModifierMagnitude = FScalableFloat(give_exp_value);  // value to add to existed base value
-
-	Modifiers.Add(modifier);  // applying
-}
-//-------------------------------------------------------------------------------------------------------------
-
-
-
-
-// UAGA_Lockpick  
-UAGA_Lockpick::UAGA_Lockpick()
-{
-	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;  // Not neccessary to call EndAbility
-	SetAssetTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag(FName("Ability.Interact") ) ) );
-}
-//-------------------------------------------------------------------------------------------------------------
-void UAGA_Lockpick::ActivateAbility(const FGameplayAbilitySpecHandle handle, const FGameplayAbilityActorInfo *actor_info,
-	const FGameplayAbilityActivationInfo activation_info, const FGameplayEventData *event_data_triger)
-{
-	AActor *player, *target;
-	FVector player_location, offset_location;
-	FHitResult hit_result;
-	FCollisionQueryParams collision_query;
-
-	if (!CommitAbility(handle, actor_info, activation_info) )
-		return;
-
-	if (HasAuthority(&activation_info) == false)
-		return;
-	
-	player = actor_info->AvatarActor.Get();
-	if (player == 0)
-		return;
-
-	player_location = player->GetActorLocation();
-	offset_location = player_location + player->GetActorForwardVector() * 200.0f;  // trace at 200 centimetr
-	collision_query.AddIgnoredActor(player);
-	if (GetWorld()->LineTraceSingleByChannel(hit_result, player_location, offset_location, ECC_Visibility, collision_query) != true)
-		return;
-	
-	target = hit_result.GetActor();
-	if (!target != 0)
-		return;
-
-	target->Destroy();  // Destroy box or any item if trace catch
-	Experience_Give(player);
-	EndAbility(handle, actor_info, activation_info, true, false);
-}
-//-------------------------------------------------------------------------------------------------------------
-void UAGA_Lockpick::Experience_Give(AActor *actor)
-{
-	UAbilitySystemComponent *asc;
-	FGameplayEffectSpecHandle effect_spec;
-
-	if (!actor != 0)
-		return;
-
-	asc = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(actor);
-	if (!asc != 0)
-		return;
-
-	effect_spec = asc->MakeOutgoingSpec(UAGE_Experience_Gain::StaticClass(), 1.0f, asc->MakeEffectContext() );
-	if (!effect_spec.IsValid() )
-		return;
-
-	asc->ApplyGameplayEffectSpecToSelf(*effect_spec.Data);
-}
-//-------------------------------------------------------------------------------------------------------------
-
-
-
+#include "Module_Character_GAS.h"  // !!! TEMP
 
 // AAModule_Character_Player
 AAModule_Character_Player::AAModule_Character_Player()
- : Is_State_Camera(false), Ability_System_Component(0), Camera_Boom(0), Camera_Follow(0)
+ : Is_State_Camera(false), Attributes(0), Ability_System_Component(0), Camera_Boom(0), Camera_Follow(0)
 {
 	GetCapsuleComponent()->InitCapsuleSize(42.0f, 96.0f);
 
@@ -189,22 +38,25 @@ AAModule_Character_Player::AAModule_Character_Player()
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Player::BeginPlay()
 {
-	FGameplayEffectContextHandle effect_context {};
-	FGameplayEffectSpecHandle effect_spec {};
+	FGameplayEffectContextHandle effect_context;
+	FGameplayEffectSpecHandle effect_spec;
 	const FVector player_location_initial { 550.0, 1990.0, 50.0 };
 	const FTransform player_transform = UAModule_IO::Module_IO_Create()->Pawn_Transform_Load();  // load from Module IO last saved player transform
 
 	Super::BeginPlay();
 
-	// 1.0. If loaded non zero transform set prev player transform || not game begining
+	// 1.0. If loaded non zero transform set prev player transform || not game beginning
 	if (player_transform.GetLocation() == FVector::ZeroVector)
 		SetActorLocation(player_location_initial);  // starting point
 	else
 		SetActorTransform(player_transform);  // loaded prev player transform and set it
 
 	// 2.0. GAS | If have asc give ability lockpicking
-	if (HasAuthority() && Ability_System_Component)
+	if (HasAuthority() == true && Ability_System_Component != 0)
+	{
 		Ability_System_Component->GiveAbility(FGameplayAbilitySpec(UAGA_Lockpick::StaticClass(), 1, 0) );
+		Ability_System_Component->GiveAbility(FGameplayAbilitySpec(UAGA_Interact::StaticClass(), 1, 0) );
+	}
 
 	// 2.1. GAS | Load from Module_IO and use Effect to apply
 	Attribute_Load();
@@ -248,54 +100,60 @@ void AAModule_Character_Player::Camera_Exit()
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Player::Interact()
 {
-	Abilities_Handler();
+	Abilities_Handler(false);
 	Attribute_Save();
 }
 //-------------------------------------------------------------------------------------------------------------
-void AAModule_Character_Player::Abilities_Handler()
+void AAModule_Character_Player::Abilities_Handler(const bool is_lock_pick)
 {
-	FGameplayAbilitySpec *lock_pick;
+    FGameplayAbilitySpec *ability_spec;
 
-	lock_pick = Ability_System_Component->FindAbilitySpecFromClass(UAGA_Lockpick::StaticClass() );
-	if (lock_pick == 0 && lock_pick->IsActive() == true)
-		return;  // if ability active or don`t have ability
+	if (is_lock_pick)
+        ability_spec = Ability_System_Component->FindAbilitySpecFromClass(UAGA_Lockpick::StaticClass() );
+	else
+        ability_spec = Ability_System_Component->FindAbilitySpecFromClass(UAGA_Interact::StaticClass() );
 
-	Ability_System_Component->TryActivateAbility(lock_pick->Handle);
+    if (ability_spec == 0 && ability_spec->IsActive() == true)
+        return; // if ability active or don`t have ability
+
+	Ability_System_Component->TryActivateAbility(ability_spec->Handle);
 }
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Player::Attribute_Save()
 {
-	constexpr int32 array_size = 4;  // 4 attributes change to enum
+	constexpr int32 array_size = 4;  // !!! 4 attributes change to enum
 	int32 index;
 
 	UObject *obj;
 	const UClass *class_info;
+	const FProperty *property;
+	const FGameplayAttributeData *character_attributes;
 	UAModule_IO *module_io;
-	FProperty *property;
-	FGameplayAttributeData *character_attributes;
 	TArray<float> player_attributes;
 
+	// 1.0. Init
 	index = 0;
 	obj = Attributes;
 	class_info = obj->GetClass();
 	module_io = UAModule_IO::Module_IO_Create();
 	player_attributes.SetNumZeroed(array_size);
 
+	// 1.1. From each property get value if its struct and double value
 	for (property = class_info->PropertyLink; property != 0; property = property->PropertyLinkNext)
 	{
-		if (property->IsA<FStructProperty>() == 0)  // if param not struct
-			return;
+		if (property->IsA<FStructProperty>() == 0)
+			return;  // if param not struct
 		
-		if (CastField<FStructProperty>(property)->Struct == FGameplayAttributeData::StaticStruct() == 0)  // if struct not FGameplayAttributeData
-			return;
+		if (CastField<FStructProperty>(property)->Struct == FGameplayAttributeData::StaticStruct() == 0)
+			return;  // if struct not FGameplayAttributeData
 		
-		character_attributes = property->ContainerPtrToValuePtr<FGameplayAttributeData>(obj);  // 
+		character_attributes = property->ContainerPtrToValuePtr<FGameplayAttributeData>(obj);
 		if (character_attributes == 0)
-			return;
+			return;  // If don`t contains valid pointer
 
-		player_attributes[index++] = character_attributes->GetCurrentValue();
+		player_attributes[index++] = character_attributes->GetCurrentValue();  // Save value
 	}
-
+	
 	module_io->GAS_Attributes_Save(player_attributes);
 	module_io->Pawn_Transform_Save(GetTransform() );
 }
