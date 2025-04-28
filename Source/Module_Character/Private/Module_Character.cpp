@@ -1,3 +1,3 @@
 #include "Module_Character.h"
 
-IMPLEMENT_PRIMARY_GAME_MODULE(FDefaultGameModuleImpl, Module_Character, "Module_Character");
+IMPLEMENT_MODULE(FDefaultModuleImpl, Module_Character);  // def implement  makes available to c++ module

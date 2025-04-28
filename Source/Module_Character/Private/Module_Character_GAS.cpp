@@ -54,7 +54,7 @@ void UAGE_Loaded_Attributes::Update()
     TArray<float> player_attributes;
     FProperty *prop_attribute;
 
-    UAModule_IO::Module_IO_Create()->GAS_Attributes_Load(player_attributes);
+	UAModule_IO_Handler::Module_IO_Create()->GAS_Attributes_Load(player_attributes);
 
     for (TFieldIterator<FProperty> prop_iterator(UAModule_Character_Attribute::StaticClass()); prop_iterator; ++prop_iterator)
     {

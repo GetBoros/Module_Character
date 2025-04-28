@@ -18,12 +18,17 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Modules/ModuleManager.h"
 
+// Controller
+#include "EnhancedInputSubsystems.h"
+#include "EnhancedInputComponent.h"
+#include "InputActionValue.h"
+
 
 // NET
 #include "Net/UnrealNetwork.h"
 
 // CUSTOM MODULE
-#include "Module_IO.h"
+#include "Module_IO_Handler.h"
 
 #pragma region PLANS
 /*

@@ -1,10 +1,6 @@
 #include "Module_Character_Controller.h"
-
 #include "Module_Character_Player.h"
-
-#include "EnhancedInputSubsystems.h"
-#include "EnhancedInputComponent.h"
-#include "InputActionValue.h"
+#include "Module_Character.h"
 
 //-------------------------------------------------------------------------------------------------------------
 AAModule_Character_Controller::AAModule_Character_Controller()

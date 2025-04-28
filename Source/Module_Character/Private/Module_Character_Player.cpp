@@ -1,7 +1,6 @@
 #include "Module_Character_Player.h"
-#include "Module_Character.h"
-
 #include "Module_Character_GAS.h"  // !!! TEMP
+#include "Module_Character.h"
 
 // AAModule_Character_Player
 AAModule_Character_Player::AAModule_Character_Player()
@@ -41,7 +40,7 @@ void AAModule_Character_Player::BeginPlay()
 	FGameplayEffectContextHandle effect_context;
 	FGameplayEffectSpecHandle effect_spec;
 	const FVector player_location_initial { 550.0, 1990.0, 50.0 };
-	const FTransform player_transform = UAModule_IO::Module_IO_Create()->Pawn_Transform_Load();  // load from Module IO last saved player transform
+	const FTransform player_transform = UAModule_IO_Handler::Module_IO_Create()->Pawn_Transform_Load();  // load from Module IO last saved player transform
 
 	Super::BeginPlay();
 
@@ -128,14 +127,14 @@ void AAModule_Character_Player::Attribute_Save()
 	const UClass *class_info;
 	const FProperty *property;
 	const FGameplayAttributeData *character_attributes;
-	UAModule_IO *module_io;
+	UAModule_IO_Handler *module_io;
 	TArray<float> player_attributes;
 
 	// 1.0. Init
 	index = 0;
 	obj = Attributes;
 	class_info = obj->GetClass();
-	module_io = UAModule_IO::Module_IO_Create();
+	module_io = UAModule_IO_Handler::Module_IO_Create();
 	player_attributes.SetNumZeroed(array_size);
 
 	// 1.1. From each property get value if its struct and double value
