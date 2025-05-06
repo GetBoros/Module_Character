@@ -5,7 +5,7 @@
 //-------------------------------------------------------------------------------------------------------------
 AAModule_Character_Controller::AAModule_Character_Controller()
  : Module_Character_Player(0), Is_Camera(false), Button_Pressed(EButton_Pressed::EBP_None), Mapping_Context(0),
-   Action_Jump(0), Action_Move(0), Action_Look(0), Action_Zoom(0), Action_Exit(0), Action_Mini_Map(0), Action_Interact(0)
+   Action_Jump(0), Action_Move(0), Action_Look(0), Action_Zoom(0), Action_Exit(0), Action_Mini_Map(0), Action_Interact(0), Action_Inventory_Open(0)
 {
 
 }
@@ -22,11 +22,11 @@ void AAModule_Character_Controller::BeginPlay()
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Controller::SetupInputComponent()
 {
-	Super::SetupInputComponent();
+	Super::SetupInputComponent();  // Must be first
 
 	UEnhancedInputComponent *input_component = Cast<UEnhancedInputComponent>(InputComponent);
 	
-	if (!input_component != 0)
+	if (input_component == 0)
 		return;
 
 	input_component->BindAction(Action_Jump, ETriggerEvent::Started, this, &AAModule_Character_Controller::Jump);
@@ -37,6 +37,8 @@ void AAModule_Character_Controller::SetupInputComponent()
 	input_component->BindAction(Action_Mini_Map, ETriggerEvent::Triggered, this, &AAModule_Character_Controller::Mini_Map);
 	input_component->BindAction(Action_Exit, ETriggerEvent::Started, this, &AAModule_Character_Controller::Exit);
 	input_component->BindAction(Action_Interact, ETriggerEvent::Started, this, &AAModule_Character_Controller::Interact);
+	input_component->BindAction(Action_Inventory_Open, ETriggerEvent::Started, this, &AAModule_Character_Controller::Inventory_Open);
+
 }
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Controller::Move(const FInputActionValue &value)
@@ -96,5 +98,11 @@ void AAModule_Character_Controller::Interact(const FInputActionValue &value)
 void AAModule_Character_Controller::Jump_Stop(const FInputActionValue &value)
 {
 	Module_Character_Player->StopJumping();
+}
+//-------------------------------------------------------------------------------------------------------------
+void AAModule_Character_Controller::Inventory_Open(const FInputActionValue &value)
+{
+	Button_Pressed = EButton_Pressed::EBP_Inventory_Open;
+	On_Button_Pressed();
 }
 //-------------------------------------------------------------------------------------------------------------

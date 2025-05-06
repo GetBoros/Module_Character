@@ -42,8 +42,6 @@ void AAModule_Character_Player::BeginPlay()
 	const FVector player_location_initial { 550.0, 1990.0, 50.0 };
 	const FTransform player_transform = UAModule_IO_Handler::Module_IO_Create()->Pawn_Transform_Load();  // load from Module IO last saved player transform
 
-	Super::BeginPlay();
-
 	// 1.0. If loaded non zero transform set prev player transform || not game beginning
 	if (player_transform.GetLocation() == FVector::ZeroVector)
 		SetActorLocation(player_location_initial);  // starting point
@@ -59,6 +57,8 @@ void AAModule_Character_Player::BeginPlay()
 
 	// 2.1. GAS | Load from Module_IO and use Effect to apply
 	Attribute_Load();
+
+	Super::BeginPlay();
 }
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Player::NotifyControllerChanged()

@@ -9,7 +9,8 @@ UENUM(BlueprintType) enum class EButton_Pressed : uint8
 	EBP_None,
 	EBP_Exit,
 	EBP_Mini_Map,
-	EBP_Interact
+	EBP_Interact,
+	EBP_Inventory_Open
 };
 //-------------------------------------------------------------------------------------------------------------
 class UInputMappingContext;
@@ -35,6 +36,7 @@ public:
 	void Mini_Map(const FInputActionValue &value);
 	void Interact(const FInputActionValue &value);
 	void Jump_Stop(const FInputActionValue &value);
+	void Inventory_Open(const FInputActionValue &value);
 
 	AAModule_Character_Player *Module_Character_Player;  // !!! Maybe change to component if need
 	bool Is_Camera;
@@ -52,6 +54,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true") ) UInputAction *Action_Exit;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true") ) UInputAction *Action_Mini_Map;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true") ) UInputAction *Action_Interact;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true") ) UInputAction *Action_Inventory_Open;
 };
 //-------------------------------------------------------------------------------------------------------------
 
