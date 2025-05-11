@@ -102,6 +102,7 @@ void AAModule_Character_Controller::Jump_Stop(const FInputActionValue &value)
 //-------------------------------------------------------------------------------------------------------------
 void AAModule_Character_Controller::Inventory_Open(const FInputActionValue &value)
 {
+	Module_Character_Player->Inventory_Handle();
 	Button_Pressed = EButton_Pressed::EBP_Inventory_Open;
 	On_Button_Pressed();
 }

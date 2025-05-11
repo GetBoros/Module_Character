@@ -32,6 +32,8 @@ public:
 
 	bool Is_State_Camera;  // Remove to switch if have more states
 
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable) void Inventory_Handle();  // BP Event
+
 private:  // !!! Prototype properties changes after to best result
 	UFUNCTION(BlueprintCallable, Category = "Camera", meta = (AllowPrivateAccess = "true") ) void Camera_Switch(const FVector location, const FRotator rotation);
 	

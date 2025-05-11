@@ -189,3 +189,13 @@ void AAModule_Character_Player::Camera_Switch(const FVector location, const FRot
 	Camera_Boom->TargetArmLength = 0;
 }
 //-------------------------------------------------------------------------------------------------------------
+//void AAModule_Character_Player::Inventory_Handle()
+//{
+//	// Show | Hide Inventory
+//
+//	// Load info for each slot
+//
+//	// Slots can try apply GE or GA if skill
+//
+//}
+////-------------------------------------------------------------------------------------------------------------
