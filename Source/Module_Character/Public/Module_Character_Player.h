@@ -53,7 +53,7 @@ private:  // !!! Prototype properties changes after to best result
 //------------------------------------------------------------------------------------------------------------
 #pragma region HELP
 /*
-*	- showdebug abilitysystem
+*	- show debug ability system
 	- Player #include "AbilitySystemInterface.h" IAbilitySystemInterface to implement UAbilitySystemComponent
 	- UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Abilities") UAbilitySystemComponent *Ab_Sy_Co;
 */
@@ -121,7 +121,7 @@ private:  // !!! Prototype properties changes after to best result
 
 	- GiveAbilityAndActivateOnce: 
 		- Specifies the Ability to add with an FGameplayAbilitySpec, and returns an FGameplayAbilitySpecHandle.
-		Because only the server can give Abilties, the Ability must be instanced and able to run on the server.
+		Because only the server can give Abilities, the Ability must be instanced and able to run on the server.
 		After attempting to run the Ability, a FGameplayAbilitySpecHandle will be returned.
 		If the Ability did not meet the required criteria, or if it could not execute, the return value will be invalid and the Ability System Component will not be granted the Ability.
 		- Similar to giving abilities, only the server can remove abilities.
@@ -165,7 +165,7 @@ private:  // !!! Prototype properties changes after to best result
 		and can have effects such as preventing future use of the Ability or any Ability that it blocks.
 		For example, if your game has a "Drink Health Potion" Gameplay Ability that doesn't end properly,
 		the character using that Ability will be unable to take any action that drinking a health potion would prevent, such as drinking another potion, sprinting, climbing ladders, and so on.
-		This Ability blockage will continue indefinitely, since the Gameplay Ability System will think that the character is stil busy drinking the potion.
+		This Ability blockage will continue indefinitely, since the Gameplay Ability System will think that the character is still busy drinking the potion.
 
 	- TAGS:
 		- Gameplay Tags can help to determine how Gameplay Abilities interact with each other.
@@ -259,7 +259,7 @@ private:  // !!! Prototype properties changes after to best result
 /*
 	- Essential wrapper to FX.
 	- Come in two different variants:
-		- Burts and Actor.
+		- Burst and Actor.
 	- Generally all the client only, audio visual elements we don`t want to spawn on a dedicated server.
 
 */
@@ -281,12 +281,12 @@ private:  // !!! Prototype properties changes after to best result
 	- Bind to ability activation failed callback // for debug
 
 - Begin Play:
-	- Listen for health attribue changes.
+	- Listen for health attribute changes.
 	- Bind to ASC->OnImmunityBlockGameplayEffectDelegate.
 
 - Attribute Sets:
 	- Primary attributes - Core RPG stats that most thing have.
-		- Health, MaxHealth, Stamina, MaxStamine.
+		- Health, MaxHealth, Stamina, Max Stamina.
 	- Secondary Attributes - In depth RPG stat not needed by all entities.
 		- Elemental resistance, bonuses, current elemental build up`s.
 	- Tertiary Attributes - Bonuses ( mainly uses by Character).
@@ -307,30 +307,30 @@ private:  // !!! Prototype properties changes after to best result
 		- Health, Mana, Stats Any.
 		- Can(Must) be wrapped by FGameplayAttribute.
 	
-	- FGameplayAttribute ( supp struct to handle FGameplayAttributeData ) :
+	- FGameplayAttribute ( sup struct to handle FGameplayAttributeData ) :
 		- need write func to get reference at FGameplayAttributeData
 		- or use macros ( ATTRIBUTE_ACCESSORS )
 		- can get numeric, name, owner, property ref.
-		- attributes have != or == comparsions
+		- attributes have != or == comparisons
 		
 	- UAttributeSet
 		- should create sub from those, stored FGameplayAttributeData, define the set of all GameplayAttributes.
-		- added to the actors as subobjects, and then registered with the AbilitySystemComponent.
-		- safe access to controll FGameplayAttribute || FGameplayAttributeData.
+		- added to the actors as sub objects, and then registered with the AbilitySystemComponent.
+		- safe access to control FGameplayAttribute || FGameplayAttributeData.
 		- can get array of all property GetAttributesFromSetClass
 		- have info about owners( ASC, Actor(info)
 		- ShouldInitProperty() can disable attribute by some time, hidden attribute, or enemy don`t have this attribute
 		- GE_(GameplayEffect execute to UAttributeSet) Pre | Post Execute :
-			- can check if have imune to effect or something else, resist, change modifire, magnitude
-			- Data.SetMagnitude(0.0f);  // Have imune to effect
-			- PostGameplayEffectExectute if health == 0 now character can be disabled
+			- can check if have immune to effect or something else, resist, change modifier, magnitude
+			- Data.SetMagnitude(0.0f);  // Have immune to effect
+			- PostGameplayEffectExecuter if health == 0 now character can be disabled
 		- PreAttributeChange() or Post :
 			- Need to clamp max attribute value like health_max 100 if 100, 99 + heal(50) must be 100.
 		- PreAttributeBaseChange() | Post :
 			- Called when baseAttribute value changed, can again use clamp or what we need.
-			- Armor with stats, Weapon, or esle.
-		- Agregators calls when execute GE at attributeSet :
-			- instant, duration, infitnity else (health + 10).
+			- Armor with stats, Weapon, or else.
+		- Aggregators calls when execute GE at attributeSet :
+			- instant, duration, infinity else (health + 10).
 
 	- MACROSES :
 		- Better do not use

@@ -23,7 +23,6 @@
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
 
-
 // NET
 #include "Net/UnrealNetwork.h"
 
